@@ -1,0 +1,11 @@
+#comment1
+key1 value1
+#comment2
+key2
+multi
+lines
+value
+#
+#comment3
+key3 value3
+#comment4
