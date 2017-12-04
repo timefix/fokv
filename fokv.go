@@ -32,7 +32,7 @@ func Open(path string) *Fokv {
         panic(fmt.Sprintf("error opening %s: %v", path, err))
     }
     f := &Fokv{}
-    //f.FilePath := path
+    f.FilePath = path
     scanner := bufio.NewScanner(file)
     k := ""
     v := ""
@@ -47,7 +47,7 @@ func Open(path string) *Fokv {
         s := scanner.Text()
         if k != "" {
             if  s != "#" {
-                if v!="" {
+                if v != "" {
                     v += "\n"
                 }
               v += s
@@ -65,11 +65,40 @@ func Open(path string) *Fokv {
               v = ""
               continue  
             }
-            k = s[0:si-1]
+            k = s[0:si]
             v = s[si+1:]
         }
         f.rows = append(f.rows, KeyValue{key: k, value: v})
         k = ""
     }
     return f
+}
+
+func (f *Fokv) Put(k string, v string) {
+    f.rows = append(f.rows, KeyValue{key: k, value: v})
+}
+
+func (f *Fokv) Save() {
+   file, err := os.Create(f.FilePath)
+   if err != nil {
+        panic(fmt.Sprintf("error write %s: %v", f.FilePath, err))
+   }
+   defer file.Close()
+   w := bufio.NewWriter(file)
+    row := ""   
+    for _, kv := range f.rows {
+        if kv.key == "#" {
+            row = kv.key + kv.value + "\n"
+        } else if strings.Index(kv.value, "\n") < 0 {
+            row = kv.key + " " + kv.value + "\n"
+        } else {
+            row = kv.key + "\n" + kv.value + "\n#\n"
+        }
+      n4, err := w.WriteString(row)
+      if err != nil {
+        panic(fmt.Sprintf("error WriteString %s: %v", row, err))
+      }
+      fmt.Printf("wrote %d bytes\n", n4)
+   }
+   w.Flush()
 }
